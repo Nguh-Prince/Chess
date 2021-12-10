@@ -17,13 +17,25 @@ class Rank:
     def __str__(self):
         return f"{number}"
 
+    def __add__(self, other: Rank):
+        return self.number + other.number
+    
+    def __sub__(self, other: Rank):
+        return self.number - other.number
+
 class File:
     def __init__(self, xcoord:float, letter:str):
         self.letter = letter
-        self.number = number
+        self.number = letters_to_numbers[ letter.lower() ]
     
     def __str__(self):
         return f"{self.letter.lower()}"
+    
+    def __add__(self, other: Rank):
+        return self.number + other.number
+    
+    def __sub__(self, other: Rank):
+        return self.number - other.number
 
 class Square:
     def __init__(self, file:File, rank:Rank, board):
@@ -35,10 +47,10 @@ class Square:
         return f"{file.__str__()}{rank.__str__()} - {self.piece.__str__()}"
 
     def isDark(self) -> bool:
-        pass
+        return ( self.rank.number + letters_to_numbers[self.file.letter.lower()] ) % 2 == 0
 
 class Piece:
-    def __init__(self, square:Square, image:str):
+    def __init__(self, color: int,square:Square, image:str):
         """
         the image string must be a path to a valid image file
         """
@@ -46,13 +58,50 @@ class Piece:
             raise FileNotFoundError
         self.square = square
         self.image = pygame.image.load(image)
+        self.color = color
         
     def moveIsValid(self, destination:Square):
         return True
     
-    def move(self, destination):
-        pass
+    def move(self, destination: Square):
+        if self.moveIsValid():
+            self.square.piece = None
+            self.square = destination
+            destination.piece = self
+            return True
 
 class Pawn(Piece):
-    def moveIsValid(self, destination):
-        king = [ f for f in self.square.board.pieces ]
+    def moveIsValid(self, destination:Square):
+        try:
+            king = [ f for f in self.square.board.pieces if f.color == self.color and isinstance(f, King) ][0]
+            if king.isChecked():
+                pass
+            else:
+                delta_x = destination.square.file - self.square.file
+                delta_y = destination.square.rank - self.square.rank
+
+                if (self.color and not delta_y) or (not self.color and delta_y): # white pawn does not move toward 1st rank, black does not move toward 8th rank
+                    return False
+
+                if abs(delta_x) <= 1:
+                    if abs(delta_x) == 1:
+                        # pawn capture
+                        return True if destination.piece else return False
+
+                    elif delta_x == 0:
+                        if abs(delta_y) > 2:
+                            return False
+                        if abs(delta_y) == 2 and (self.color and self.square.rank.number == 2) or (not self.color and self.square.rank.number == 7):
+                            return True
+                        else:
+                            return False
+
+                else:
+                    return False
+        except IndexError as e:
+            # no king
+            raise e
+
+    def possibleMoves(self, destination: Square):
+        
+        pass
