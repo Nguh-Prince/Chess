@@ -96,21 +96,27 @@ class Piece:
         king = self.king()
 
         relative_coordinates_from_king = (king.square.file - self.square.file, king.square.rank - self.square.rank)
+        pieces_in_the_way = []
 
         # piece can only be pinned if it is on the same file / rank or diagonal as the king
         if abs(relative_coordinates_from_king[0]) != abs(relative_coordinates_from_king[1]) and relative_coordinates_from_king[0] != and relative_coordinates_from_king[1] != 0:
             return False
         elif abs(relative_coordinates_from_king[0]) == abs(relative_coordinates_from_king[1]): # same diagonal as king
-            pass
+            attacking_piece = [  ]
         elif relative_coordinates_from_king[0] == 0 or relative_coordinates_from_king[1] == 1:
-            attacking_piece = [ f for f in self.square.board if isinstance(f, Rook) and self.square in f.possibleMoves() and self.file == f.file ] if relative_coordinates_from_king[0] == 0 else [ f for f in self.square.board if isinstance(f, Rook) and self.square in f.possibleMoves() and self.rank == f.rank ]
+            attacking_piece = [ f for f in self.square.board if isinstance(f, Rook) and self.square in f.possibleMoves() and self.square.file == f.square.file ] if relative_coordinates_from_king[0] == 0 else [ f for f in self.square.board if isinstance(f, Rook) and self.square in f.possibleMoves() and self.rank == f.rank ]
 
             if len(attacking_piece) < 0:
                 return False
             else:
                 attacking_piece = attacking_piece[0]
-                
-        pass
+                # check if there are any pieces between this one and the king
+                if relative_coordinates_from_king[0] == 0:
+                    pieces_in_the_way = [ f for f in self.square.board.pieces if f.square.file == king.square.file and king.square.rank - f.square.rank < relative_coordinates_from_king[1] ] if relative_coordinates_from_king[1] < 0 else [ f for f in self.square.board.pieces if f.square.file == king.square.file and king.square.rank - f.square.rank > relative_coordinates_from_king[1] ]
+                else:
+                    pieces_in_the_way = [ f for f in self.square.board.pieces if f.square.rank == king.square.rank and king.square.file - f.square.file < relative_coordinates_from_king[0] ] if relative_coordinates_from_king[0] < 0 else [ f for f in self.square.board.pieces if f.square.rank == king.square.square.rank and king.square.file - f.square.file > relative_coordinates_from_king[0] ]
+        
+        return len(pieces_in_the_way) < 1
 
 class Pawn(Piece):
     def moveIsValid(self, destination:Square):
@@ -137,6 +143,5 @@ class Pawn(Piece):
                         return True
                     else:
                         return False
-
             else:
                 return False
