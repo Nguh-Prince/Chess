@@ -2,6 +2,9 @@ import pygame
 import os
 
 letters_to_numbers = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h': 8}
+numbers_to_letters = { v: k for k, v in letters_to_numbers.items() }
+
+PIECES_FOLDER = r"E:\personal_projects\chess\chess pieces"
 
 class Board:
     def __init__(self):
@@ -51,7 +54,7 @@ class Square:
         return ( self.rank.number + letters_to_numbers[self.file.letter.lower()] ) % 2 == 0
 
 class Piece:
-    def __init__(self, color: int,square:Square, image:str):
+    def __init__(self, color: int, square:Square, image:str) -> None:
         """
         the image string must be a path to a valid image file
         """
@@ -60,8 +63,9 @@ class Piece:
         self.square = square
         self.image = pygame.image.load(image)
         self.color = color
+        self.name = ''
 
-    def king(self) -> King:
+    def king(self):
         try:
             king = [ f for f in self.square.board if isinstance(f, King) and f.color == self.color ][0]
             return king
@@ -119,6 +123,10 @@ class Piece:
         return len(pieces_in_the_way) < 1
 
 class Pawn(Piece):
+    def __init__(self, color: int, square: Square, image: str):
+        super().__init__(color, square, image)
+        self.name = "Pawn"
+
     def moveIsValid(self, destination:Square):
         king = self.king()
 
@@ -145,3 +153,66 @@ class Pawn(Piece):
                         return False
             else:
                 return False
+
+class Knight(Piece):
+    def __init__(self, color: int, square: Square, image: str) -> None:
+        super().__init__(color, square, image)
+        self.name = "Knight"
+
+class Bishop(Piece):
+    def __init__(self, color: int, square: Square, image: str) -> None:
+        super().__init__(color, square, image)
+        self.name = "Bishop"
+
+class Rook(Piece):
+    def __init__(self, color: int, square: Square, image: str) -> None:
+        super().__init__(color, square, image)
+        self.name = "Rook"
+
+class Queen(Bishop, Rook):
+    def __init__(self, color: int, square: Square, image: str) -> None:
+        super().__init__(color, square, image)
+        self.name = "Queen"
+
+class King(Piece):
+    def __init__(self, color: int, square: Square, image: str) -> None:
+        super().__init__(color, square, image)
+        self.name = "King"
+
+class Board(pygame.Rect):
+    def __init__(self, topLeft, cellSize) -> None:
+        super.__init__(topLeft, cellSize*8, cellSize*8)
+        self.ranks = []
+        self.files = []
+        self.squares = []
+        self.__flipped = False # true if the board is flipped, i.e topLeft square is h1 instead of a8
+        self.pieces = []
+
+        # create 8 ranks and 8 files
+        for i in range(8):
+            self.ranks.append( Rank(self.topleft[1] + (7 - i) * cellSize, i+1) )  # puts the 8th rank closest to the topleft of the board
+            self.files.append( File(self.topleft[0] + cellSize), numbers_to_letters[i+1].upper() )
+
+        # create the squares and automatically place pieces on them
+        for file in self.files:
+            for rank in self.ranks:
+                square = Square(file, rank, self)
+                self.squares.append( square )
+
+                if rank.number in [2, 7]:  # create pawns
+                    self.pieces.append( Pawn(0, square, os.path.join(PIECES_FOLDER, 'light', 'Pawn.png') ) if rank.number == 2 else Pawn(1, square, os.path.join(PIECES_FOLDER, 'dark', 'Pawn.png') ) )
+                
+                elif rank.number in [1, 8]:
+                    if file.number in [1, 8]: # rooks
+                        self.pieces.append( Rook(0, square, os.path.join(PIECES_FOLDER, 'light', 'Rook.png') ) if rank.number == 1 else Rook(1, square, os.path.join(PIECES_FOLDER, 'dark', 'Rook.png')) )
+                    elif file.number in [2, 7]:
+                        self.pieces.append( Knight(0, square, os.path.join(PIECES_FOLDER, 'light', 'Knight.png') ) if rank.number == 1 else Knight(1, square, os.path.join(PIECES_FOLDER, 'dark', 'Knight.png')) )
+                    elif file.number in [3, 6]:
+                        self.pieces.append( Bishop(0, square, os.path.join(PIECES_FOLDER, 'light', 'Bishop.png') ) if rank.number == 1 else Bishop(1, square, os.path.join(PIECES_FOLDER, 'dark', 'Bishop.png')) )
+                    elif file.number == 4:
+                        self.pieces.append( Queen(0, square, os.path.join(PIECES_FOLDER, 'light', 'Queen.png') ) if rank.number == 1 else Queen(1, square, os.path.join(PIECES_FOLDER, 'dark', 'Queen.png')) )
+                    elif file.number == 5:
+                        self.pieces.append( King(0, square, os.path.join(PIECES_FOLDER, 'light', 'King.png') ) if rank.number == 1 else King(1, square, os.path.join(PIECES_FOLDER, 'dark', 'King.png')) )
+
+    def flip(self) -> None:
+        pass
