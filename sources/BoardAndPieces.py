@@ -18,7 +18,7 @@ class Rank:
         self.number = number
     
     def __str__(self):
-        return f"{number}"
+        return f"{self.number}"
 
     def __add__(self, other: Rank):
         return self.number + other.number
@@ -30,6 +30,7 @@ class File:
     def __init__(self, xcoord:float, letter:str):
         self.letter = letter
         self.number = letters_to_numbers[ letter.lower() ]
+        self.xcoord = xcoord
     
     def __str__(self):
         return f"{self.letter.lower()}"
@@ -48,10 +49,13 @@ class Square:
         self.board = board
 
     def __str__(self):
-        return f"{file.__str__()}{rank.__str__()} - {self.piece.__str__()}"
+        return f"{self.file.__str__()}{self.rank.__str__()} - {self.piece.__str__()}"
 
-    def isDark(self) -> bool:
+    def is_dark(self) -> bool:
         return ( self.rank.number + letters_to_numbers[self.file.letter.lower()] ) % 2 == 0
+    
+    def coordinates(self):
+        return (self.file.xcoord, self.rank.ycoord)
 
 class Piece:
     def __init__(self, color: int, square:Square, image:str) -> None:
@@ -198,21 +202,32 @@ class Board(pygame.Rect):
             for rank in self.ranks:
                 square = Square(file, rank, self)
                 self.squares.append( square )
-
-                if rank.number in [2, 7]:  # create pawns
-                    self.pieces.append( Pawn(0, square, os.path.join(PIECES_FOLDER, 'light', 'Pawn.png') ) if rank.number == 2 else Pawn(1, square, os.path.join(PIECES_FOLDER, 'dark', 'Pawn.png') ) )
                 
-                elif rank.number in [1, 8]:
-                    if file.number in [1, 8]: # rooks
-                        self.pieces.append( Rook(0, square, os.path.join(PIECES_FOLDER, 'light', 'Rook.png') ) if rank.number == 1 else Rook(1, square, os.path.join(PIECES_FOLDER, 'dark', 'Rook.png')) )
-                    elif file.number in [2, 7]:
-                        self.pieces.append( Knight(0, square, os.path.join(PIECES_FOLDER, 'light', 'Knight.png') ) if rank.number == 1 else Knight(1, square, os.path.join(PIECES_FOLDER, 'dark', 'Knight.png')) )
-                    elif file.number in [3, 6]:
-                        self.pieces.append( Bishop(0, square, os.path.join(PIECES_FOLDER, 'light', 'Bishop.png') ) if rank.number == 1 else Bishop(1, square, os.path.join(PIECES_FOLDER, 'dark', 'Bishop.png')) )
-                    elif file.number == 4:
-                        self.pieces.append( Queen(0, square, os.path.join(PIECES_FOLDER, 'light', 'Queen.png') ) if rank.number == 1 else Queen(1, square, os.path.join(PIECES_FOLDER, 'dark', 'Queen.png')) )
-                    elif file.number == 5:
-                        self.pieces.append( King(0, square, os.path.join(PIECES_FOLDER, 'light', 'King.png') ) if rank.number == 1 else King(1, square, os.path.join(PIECES_FOLDER, 'dark', 'King.png')) )
+                if rank.number in [1,2,7,8]:
+                    piece = None
+
+                    if rank.number in [2, 7]:  # create pawns
+                        piece = Pawn(0, square, os.path.join(PIECES_FOLDER, 'light', 'Pawn.png') ) if rank.number == 2 else Pawn(1, square, os.path.join(PIECES_FOLDER, 'dark', 'Pawn.png') )
+                        self.pieces.append( piece )
+                    
+                    elif rank.number in [1, 8]:
+                        if file.number in [1, 8]: # rooks
+                            piece = Rook(0, square, os.path.join(PIECES_FOLDER, 'light', 'Rook.png') ) if rank.number == 2 else Rook(1, square, os.path.join(PIECES_FOLDER, 'dark', 'Rook.png') )
+                            self.pieces.append( piece )
+                        elif file.number in [2, 7]:
+                            piece = Knight(0, square, os.path.join(PIECES_FOLDER, 'light', 'Knight.png') ) if rank.number == 2 else Knight(1, square, os.path.join(PIECES_FOLDER, 'dark', 'Knight.png') )
+                            self.pieces.append( piece )
+                        elif file.number in [3, 6]:
+                            piece = Bishop(0, square, os.path.join(PIECES_FOLDER, 'light', 'Bishop.png') ) if rank.number == 2 else Bishop(1, square, os.path.join(PIECES_FOLDER, 'dark', 'Bishop.png') )
+                            self.pieces.append( piece )
+                        elif file.number == 4:
+                            piece = Queen(0, square, os.path.join(PIECES_FOLDER, 'light', 'Queen.png') ) if rank.number == 2 else Queen(1, square, os.path.join(PIECES_FOLDER, 'dark', 'Queen.png') )
+                            self.pieces.append( piece )
+                        elif file.number == 5:
+                            piece = King(0, square, os.path.join(PIECES_FOLDER, 'light', 'King.png') ) if rank.number == 2 else King(1, square, os.path.join(PIECES_FOLDER, 'dark', 'King.png') )
+                            self.pieces.append( piece )
+
+                    square.piece = piece
 
     def flip(self) -> None:
         pass
